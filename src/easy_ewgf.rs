@@ -1,175 +1,168 @@
-use {
-    smash::{
-        lua2cpp::*,
-        app::{sv_animcmd::*, lua_bind::*, *},
-        lib::{lua_const::*},
-    },
-    smash_script::*,
-    smashline::{*, Priority::*}
+use std::sync::atomic::{AtomicI32, AtomicI64, AtomicU32, AtomicU8, Ordering};
+
+use crate::hid::{
+    get_npad_full_key_state, get_npad_gc_state, get_npad_handheld_state,
+    get_npad_joy_dual_state, get_npad_joy_left_state, get_npad_joy_right_state,
+    NpadState, BUTTON_A,
 };
 
+// phases 1..=3 emit the 623+A command one step at a time
+static INJECT_PHASE: AtomicU8 = AtomicU8::new(0);
+static LAST_UPDATE_COUNT: AtomicI64 = AtomicI64::new(-1);
 
-unsafe extern "C" fn game_appealhi(agent: &mut L2CAgentBase) {
-    if macros::is_excute(agent) {
-        MotionModule::change_motion(agent.module_accessor, Hash40::new("attack_step_2f"), 0.0, 1.0, false, 0.0, false, false);
-        macros::HIT_NODE(agent, Hash40::new("head"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("bust"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("shoulderl"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("shoulderr"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("arml"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("armr"), *HIT_STATUS_XLU);
-    }
-    frame(agent.lua_state_agent, 1.0);
-    macros::FT_MOTION_RATE(agent, 0.7);
-    frame(agent.lua_state_agent, 7.0);
-    macros::FT_MOTION_RATE(agent, 0.5);
-    frame(agent.lua_state_agent, 9.0);
-    macros::FT_MOTION_RATE(agent, 1.0);
-    frame(agent.lua_state_agent, 10.0);
-    if macros::is_excute(agent) {
-        macros::HIT_NODE(agent, Hash40::new("head"), *HIT_STATUS_NORMAL);
-        macros::HIT_NODE(agent, Hash40::new("bust"), *HIT_STATUS_NORMAL);
-        macros::HIT_NODE(agent, Hash40::new("shoulderl"), *HIT_STATUS_NORMAL);
-        macros::HIT_NODE(agent, Hash40::new("arml"), *HIT_STATUS_NORMAL);
-        macros::HIT_NODE(agent, Hash40::new("shoulderr"), *HIT_STATUS_XLU);
-        macros::HIT_NODE(agent, Hash40::new("armr"), *HIT_STATUS_XLU);
-        macros::ATTACK(agent, 0, 0, Hash40::new("handr"), 14.5, 88, 5, 0, 102, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 1, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 5.0, 0.0, 13.0, 6.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 2, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 3.0, -1.0, 9.0, 3.5, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 3, 0, Hash40::new("handr"), 14.0, 81, 5, 0, 92, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 4, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 5.0, 0.0, 13.0, 6.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 5, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 3.0, -1.0, 9.0, 3.5, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 1, 1.2);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 2, 1.2);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 0, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 1, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 2, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 3, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 4, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 5, 14.0, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 0, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 1, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 2, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 3, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 4, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 5, *CAMERA_QUAKE_KIND_L, false);
-    }
-    frame(agent.lua_state_agent, 11.0);
-    if macros::is_excute(agent) {
-        macros::ATTACK(agent, 0, 0, Hash40::new("handr"), 14.5, 88, 5, 0, 102, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 1, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 5.0, 0.0, 18.0, 5.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 2, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 3.0, -1.0, 13.0, 7.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 3, 0, Hash40::new("handr"), 14.0, 81, 5, 0, 92, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 4, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 5.0, 0.0, 18.0, 5.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 5, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 3.0, -1.0, 13.0, 7.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 0, 1.2);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 1, 1.2);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 2, 1.2);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 0, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 1, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 2, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 3, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 4, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 5, 14.0, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 0, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 1, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 2, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 3, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 4, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 5, *CAMERA_QUAKE_KIND_L, false);
-    }
-    frame(agent.lua_state_agent, 12.0);
-    if macros::is_excute(agent) {
-        macros::ATTACK(agent, 0, 0, Hash40::new("handr"), 14.5, 88, 5, 0, 102, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 1, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 5.0, 0.0, 19.0, 5.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 2, 0, Hash40::new("top"), 14.5, 88, 5, 0, 102, 3.0, 0.0, 15.0, 7.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_G, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 3, 0, Hash40::new("handr"), 14.0, 81, 5, 0, 92, 2.5, 0.0, 0.0, 0.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 4, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 5.0, 0.0, 19.0, 5.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATTACK(agent, 5, 0, Hash40::new("top"), 14.0, 81, 5, 0, 92, 3.0, 0.0, 15.0, 7.0, None, None, None, 0.3, 1.0, *ATTACK_SETOFF_KIND_OFF, *ATTACK_LR_CHECK_F, false, 5, 0.0, 0, false, false, false, false, true, *COLLISION_SITUATION_MASK_A, *COLLISION_CATEGORY_MASK_ALL, *COLLISION_PART_MASK_ALL, false, Hash40::new("collision_attr_paralyze"), *ATTACK_SOUND_LEVEL_M, *COLLISION_SOUND_ATTR_DEMON_PUNCH01, *ATTACK_REGION_PUNCH);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 0, 1.2);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 1, 1.2);
-        macros::ATK_SET_SHIELD_SETOFF_MUL(agent, 2, 1.2);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 0, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 1, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 2, 19.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 3, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 4, 14.0, false);
-        AttackModule::set_add_reaction_frame_revised(agent.module_accessor, 5, 14.0, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 0, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 1, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 2, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 3, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 4, *CAMERA_QUAKE_KIND_L, false);
-        AttackModule::set_attack_camera_quake_forced(agent.module_accessor, 5, *CAMERA_QUAKE_KIND_L, false);
-    }
-    frame(agent.lua_state_agent, 14.0);
-    if macros::is_excute(agent) {
-        AttackModule::clear(agent.module_accessor, 0, false);
-        AttackModule::clear(agent.module_accessor, 1, false);
-        AttackModule::clear(agent.module_accessor, 2, false);
-        AttackModule::clear(agent.module_accessor, 3, false);
-        AttackModule::clear(agent.module_accessor, 4, false);
-        AttackModule::clear(agent.module_accessor, 5, false);
-    }
-    frame(agent.lua_state_agent, 15.0);
-    if macros::is_excute(agent) {
-        AttackModule::clear(agent.module_accessor, 6, false);
-        HitModule::set_status_all(agent.module_accessor, HitStatus(*HIT_STATUS_NORMAL), 0);
-    }
-    macros::FT_MOTION_RATE(agent, 0.9);
-}
+// most recent direction the user nudged the L-stick in
+static LAST_DIRECTION: AtomicI32 = AtomicI32::new(1);
+static DIRECTION_FRESHNESS: AtomicU32 = AtomicU32::new(0);
+static CACHED_SIGN: AtomicI32 = AtomicI32::new(1);
 
+const STICK_FULL: i32 = 32767;
+const TRIGGER_THRESHOLD: i32 = -20000;
+const DIRECTION_THRESHOLD: i32 = 10000;
+// about 300ms at a 200Hz controller poll
+const FRESHNESS_WINDOW: u32 = 60;
 
-unsafe extern "C" fn effect_appealhi(agent: &mut L2CAgentBase) {
-    if macros::is_excute(agent) {
-        macros::LANDING_EFFECT(agent, Hash40::new("sys_dash_smoke"), Hash40::new("top"), 0, 0, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 0, 0, false);
-        macros::LAST_EFFECT_SET_RATE(agent, 1.3);
-        macros::EFFECT_FOLLOW_NO_STOP(agent, Hash40::new("demon_s_fujinken_elec"), Hash40::new("waist"), 2, 0, 0, 0, 0, 0, 1, true);
-    }
-    frame(agent.lua_state_agent, 10.0);
-    if macros::is_excute(agent) {
-        macros::EFFECT_FOLLOW_ALPHA(agent, Hash40::new("demon_smash_arc"), Hash40::new("top"), 1.7, 13, 1.5, 0, -2, 93, 0.8, true, 0.2);
-        macros::LAST_EFFECT_SET_RATE(agent, 2);
-    }
-    frame(agent.lua_state_agent, 15.0);
-    if macros::is_excute(agent) {
-        macros::EFFECT_OFF_KIND(agent, Hash40::new("demon_s_fujinken_elec"), false, false);
+fn direction_from_lstick(x: i32) -> Option<i32> {
+    if x > DIRECTION_THRESHOLD {
+        Some(1)
+    } else if x < -DIRECTION_THRESHOLD {
+        Some(-1)
+    } else {
+        None
     }
 }
 
-unsafe extern "C" fn sound_appealhi(agent: &mut L2CAgentBase) {
-    frame(agent.lua_state_agent, 3.0);
-    if macros::is_excute(agent) {
-        macros::PLAY_SE(agent, Hash40::new("se_demon_spark03"));
+fn resolve_facing_sign(s: &NpadState) -> i32 {
+    if let Some(d) = direction_from_lstick(s.lstick_x) {
+        return d;
     }
-    frame(agent.lua_state_agent, 9.0);
-    if macros::is_excute(agent) {
-        macros::PLAY_SE(agent, Hash40::new("se_demon_attackstep2"));
-        macros::PLAY_SE(agent, Hash40::new("vc_demon_attack05"));
-        macros::PLAY_SE(agent, Hash40::new("se_demon_attackstep2f"));
+    // stick is neutral but was pushed recently
+    if DIRECTION_FRESHNESS.load(Ordering::Relaxed) > 0 {
+        return LAST_DIRECTION.load(Ordering::Relaxed);
+    }
+    1
+}
+
+fn process_state(s: &mut NpadState) {
+    let last_uc = LAST_UPDATE_COUNT.load(Ordering::Relaxed);
+    let is_new_update = s.update_count != last_uc;
+
+    if is_new_update {
+        LAST_UPDATE_COUNT.store(s.update_count, Ordering::Relaxed);
+
+        match direction_from_lstick(s.lstick_x) {
+            Some(d) => {
+                LAST_DIRECTION.store(d, Ordering::Relaxed);
+                DIRECTION_FRESHNESS.store(FRESHNESS_WINDOW, Ordering::Relaxed);
+            }
+            None => {
+                let f = DIRECTION_FRESHNESS.load(Ordering::Relaxed);
+                if f > 0 {
+                    DIRECTION_FRESHNESS.store(f - 1, Ordering::Relaxed);
+                }
+            }
+        }
+
+        let phase = INJECT_PHASE.load(Ordering::Relaxed);
+        if phase == 0 {
+            if s.rstick_y < TRIGGER_THRESHOLD {
+                CACHED_SIGN.store(resolve_facing_sign(s), Ordering::Relaxed);
+                INJECT_PHASE.store(1, Ordering::Relaxed);
+            }
+        } else {
+            let next = match phase {
+                1 => 2,
+                2 => 3,
+                3 => 0,
+                p => p,
+            };
+            INJECT_PHASE.store(next, Ordering::Relaxed);
+        }
+    }
+
+    let phase = INJECT_PHASE.load(Ordering::Relaxed);
+    if phase == 0 {
+        return;
+    }
+    let sign = CACHED_SIGN.load(Ordering::Relaxed);
+    match phase {
+        1 => {
+            s.lstick_x = STICK_FULL * sign;
+            s.lstick_y = 0;
+            s.rstick_x = 0;
+            s.rstick_y = 0;
+        }
+        2 => {
+            s.lstick_x = 0;
+            s.lstick_y = -STICK_FULL;
+            s.rstick_x = 0;
+            s.rstick_y = 0;
+        }
+        3 => {
+            s.lstick_x = STICK_FULL * sign;
+            s.lstick_y = -STICK_FULL;
+            s.rstick_x = 0;
+            s.rstick_y = 0;
+            s.buttons |= BUTTON_A;
+        }
+        _ => {}
     }
 }
 
-unsafe extern "C" fn expression_appealhi(agent: &mut L2CAgentBase) {
-    if macros::is_excute(agent) {
-        ItemModule::set_have_item_visibility(agent.module_accessor, false, 0);
-        slope!(agent, *MA_MSC_CMD_SLOPE_SLOPE, *SLOPE_STATUS_LR);
+#[skyline::hook(replace = get_npad_full_key_state)]
+unsafe fn full_key_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
     }
-    frame(agent.lua_state_agent, 8.0);
-    if macros::is_excute(agent) {
-        ControlModule::set_rumble(agent.module_accessor, Hash40::new("rbkind_80_nohitm"), 0, false, *BATTLE_OBJECT_ID_INVALID as u32);
+}
+
+#[skyline::hook(replace = get_npad_handheld_state)]
+unsafe fn handheld_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
     }
-    frame(agent.lua_state_agent, 10.0);
-    if macros::is_excute(agent) {
-        macros::RUMBLE_HIT(agent, Hash40::new("rbkind_80_attack_critical"), 0);
+}
+
+#[skyline::hook(replace = get_npad_joy_dual_state)]
+unsafe fn joy_dual_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
+    }
+}
+
+#[skyline::hook(replace = get_npad_joy_left_state)]
+unsafe fn joy_left_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
+    }
+}
+
+#[skyline::hook(replace = get_npad_joy_right_state)]
+unsafe fn joy_right_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
+    }
+}
+
+#[skyline::hook(replace = get_npad_gc_state)]
+unsafe fn gc_hook(state: *mut NpadState, id: *const u32) {
+    call_original!(state, id);
+    if !state.is_null() {
+        process_state(&mut *state);
     }
 }
 
 pub fn install() {
-    Agent::new("demon")
-        .game_acmd("game_attacklw3", game_appealhi, Default)
-        .effect_acmd("effect_attacklw3", effect_appealhi, Default)
-        .sound_acmd("sound_attacklw3", sound_appealhi, Default)
-        .expression_acmd("expression_attacklw3", expression_appealhi, Default)
-        .install();
+    skyline::install_hooks!(
+        full_key_hook,
+        handheld_hook,
+        joy_dual_hook,
+        joy_left_hook,
+        joy_right_hook,
+        gc_hook,
+    );
 }
