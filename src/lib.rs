@@ -2,6 +2,8 @@
 #![allow(unused_macros)]
 
 mod hid;
+mod memory;
+mod state;
 mod easy_ewgf;
 
 #[skyline::main(name = "ssbu_easy_ewgf")]

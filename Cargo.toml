@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 skyline = "0.6.0"
+skyline_smash = { git = "https://github.com/ultimate-research/skyline-smash.git", features = ["weak_l2cvalue"] }
 
 [profile.dev]
 panic = "abort"

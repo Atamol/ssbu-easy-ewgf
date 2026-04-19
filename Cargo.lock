@@ -3,10 +3,27 @@
 version = 4
 
 [[package]]
+name = "compile-time-lua-bind-hash"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "660bcccd4aaa4836cb685952d9ea4fb2b57d2565f4fd0c492fce4d2c0a1be0c0"
+dependencies = [
+ "lua_bind_hash",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
+name = "libc-nnsdk"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ece4a9a361bf75974e2c18b719e8fd501e4e336d7a5db22d077c4f2367a94be9"
 
 [[package]]
 name = "libc-nnsdk"
@@ -15,13 +32,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1256a11d163c7288d94909f8120ede53294d8c233df314b0e4f01cf0269707da"
 
 [[package]]
+name = "lua_bind_hash"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee9675fd198b39d86a7d5d20c59ae9639a3b4157f28ebd6cc09b9f1397ab118a"
+
+[[package]]
 name = "nnsdk"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27692267bad39aba64dd4549de1ec63a22e41b6dd6b5ec99c7bf6dba175a14bd"
 dependencies = [
- "libc-nnsdk",
+ "libc-nnsdk 0.5.0",
 ]
+
+[[package]]
+name = "nnsdk"
+version = "0.6.1"
+source = "git+https://github.com/ultimate-research/nnsdk-rs#ca3f1e3fa3fb16209f8407795772ea7245440c38"
+dependencies = [
+ "libc-nnsdk 0.5.0",
+]
+
+[[package]]
+name = "paste"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "proc-macro2"
@@ -47,9 +84,19 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b4c2c28cda0d198befe59479c593537fc306cabb61d32a9428fcd2725df35c6"
 dependencies = [
- "libc-nnsdk",
- "nnsdk",
- "skyline_macro",
+ "libc-nnsdk 0.5.0",
+ "nnsdk 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "skyline_macro 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "skyline"
+version = "0.6.0"
+source = "git+https://github.com/ultimate-research/skyline-rs#6b52d321275639f26c2371d8142550ba0013a5e4"
+dependencies = [
+ "libc-nnsdk 0.5.0",
+ "nnsdk 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "skyline_macro 0.2.1 (git+https://github.com/ultimate-research/skyline-rs)",
 ]
 
 [[package]]
@@ -65,10 +112,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "skyline_macro"
+version = "0.2.1"
+source = "git+https://github.com/ultimate-research/skyline-rs#6b52d321275639f26c2371d8142550ba0013a5e4"
+dependencies = [
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "skyline_smash"
+version = "0.1.0"
+source = "git+https://github.com/ultimate-research/skyline-smash.git#5c23ac5b81e7ea81c7365ff6ae3294e99568a2ce"
+dependencies = [
+ "compile-time-lua-bind-hash",
+ "lazy_static",
+ "libc-nnsdk 0.4.0",
+ "nnsdk 0.6.1 (git+https://github.com/ultimate-research/nnsdk-rs)",
+ "paste",
+ "skyline 0.6.0 (git+https://github.com/ultimate-research/skyline-rs)",
+]
+
+[[package]]
 name = "ssbu_easy_ewgf"
 version = "1.0.0"
 dependencies = [
- "skyline",
+ "skyline 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "skyline_smash",
 ]
 
 [[package]]
