@@ -1,8 +1,7 @@
 #![feature(proc_macro_hygiene)]
 #![allow(unused_macros)]
 
-mod hid;
-mod memory;
+mod offsets;
 mod state;
 mod easy_ewgf;
 

@@ -10,7 +10,7 @@ use smash::app::{
 
 const FIGHTER_KIND_DEMON: i32 = 0x5C;
 
-// Looked up at init; the game writes the singleton pointer later
+// Resolved by LookupSymbol at init, game fills in the pointer later
 static FIGHTER_MANAGER_ADDR: AtomicUsize = AtomicUsize::new(0);
 
 pub fn init() {
@@ -48,7 +48,7 @@ fn entry_kazuya_boma(entry_id: i32) -> Option<*mut BattleObjectModuleAccessor> {
     }
     let battle_object_id =
         unsafe { FighterEntryFns::current_fighter_id(entry) } as u32;
-    // Top 4 bits = object category; fighters are 0
+    // Top 4 bits = object category, 0 means fighter
     if battle_object_id >> 28 != 0 {
         return None;
     }

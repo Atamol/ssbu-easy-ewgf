@@ -38,6 +38,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee9675fd198b39d86a7d5d20c59ae9639a3b4157f28ebd6cc09b9f1397ab118a"
 
 [[package]]
+name = "memchr"
+version = "2.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
+
+[[package]]
 name = "nnsdk"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -53,6 +59,12 @@ source = "git+https://github.com/ultimate-research/nnsdk-rs#ca3f1e3fa3fb16209f84
 dependencies = [
  "libc-nnsdk 0.5.0",
 ]
+
+[[package]]
+name = "once_cell"
+version = "1.21.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "paste"
@@ -139,6 +151,8 @@ dependencies = [
 name = "ssbu_easy_ewgf"
 version = "1.0.0"
 dependencies = [
+ "memchr",
+ "once_cell",
  "skyline 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "skyline_smash",
 ]
