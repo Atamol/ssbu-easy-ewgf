@@ -11,11 +11,13 @@ static CACHED_SIGN: [AtomicI32; 8] = [ONE_I32; 8];
 static PREV_CSTICK_DOWN: [AtomicBool; 8] = [FALSE_BOOL; 8];
 
 const BTN_ATTACK: u32 = 1 << 0;
+const BTN_ATTACK_MIRROR: u32 = 1 << 9;
 const BTN_CSTICK_ON: u32 = 1 << 7;
 
 const STICK_MAX: i8 = 127;
-// Above every C-stick deadzone I've seen (~0.63 of full range)
-const CSTICK_TRIGGER: i8 = -80;
+// Some controllers only push stick_y to about -70 even at full C-stick
+// down, so the threshold has to be lenient
+const CSTICK_TRIGGER: i8 = -30;
 
 // Written out by final_input_mapping, command detection reads this
 #[repr(C)]
@@ -54,7 +56,7 @@ fn phase_input(phase: u8, sign: i32) -> MappedInput {
         1 => MappedInput { stick_x: sx(STICK_MAX), ..NEUTRAL_INPUT },
         2 => MappedInput { stick_y: -STICK_MAX, ..NEUTRAL_INPUT },
         3 => MappedInput {
-            buttons: BTN_ATTACK,
+            buttons: BTN_ATTACK | BTN_ATTACK_MIRROR,
             stick_x: sx(STICK_MAX),
             stick_y: -STICK_MAX,
             ..NEUTRAL_INPUT
